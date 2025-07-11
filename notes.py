@@ -1,45 +1,61 @@
-import sys
-from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5.QtCore import Qt
+import sys ,pathlib
+from PyQt5.QtWidgets import QApplication, QTextEdit, QWidget, QVBoxLayout
+from PyQt5.QtCore import QTimer, QSaveFile, Qt
 
-class FloatingSquare(QWidget):
-    def __init__(self):
+
+class FloatingNote(QTextEdit):
+    """A frameless, always‑on‑top sticky note you can type into and drag around."""
+
+    def __init__(self, save_path: str | pathlib.Path,x: int = 100, y: int = 100, w: int = 200, h: int = 200, parent=None):
         super().__init__()
-
-        # Frameless & always-on-top window
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setStyleSheet(
+            """
+            FloatingNote {
+                background: #fff9a0;      
+                border: 2px solid #000;
+                color: #000;
+                font: 12pt "Arial";
+            }
+            """
+        )
+        self.setPlaceholderText("Type your note…")
+        self.setAcceptRichText(False)
+        self._path = pathlib.Path(save_path)
+        self._timer = QTimer(self, interval=1_000, singleShot=True)
+        self._timer.timeout.connect(self._flush_to_disk)
 
-        # Starting size & position
-        self.resize(200, 200)
-        self.move(100, 100)
-
-        # Make the background translucent so our paintEvent shows the RGBA fill
-        self.setAttribute(Qt.WA_TranslucentBackground)
-
+        self.textChanged.connect(self._timer.start)
+        self.setFixedSize(w, h)
+        self.move(x, y)
         self.show()
 
-    def paintEvent(self, event):
-        from PyQt5.QtGui import QPainter, QColor, QPen
-        painter = QPainter(self)
-        # Semi-transparent red fill
-        painter.setBrush(QColor(255, 0, 0, 128))
-        # Black border, 2px wide
-        pen = QPen(QColor(0, 0, 0))
-        pen.setWidth(2)
-        painter.setPen(pen)
-        painter.drawRect(self.rect())
-
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            # Ask Qt to start a native window drag
+        if (
+            event.button() == Qt.LeftButton
+            and not self.cursorForPosition(event.pos()).hasSelection()
+        ):
             win_handle = self.windowHandle()
             if win_handle is not None:
                 win_handle.startSystemMove()
             event.accept()
         else:
             super().mousePressEvent(event)
+    
+    def _flush_to_disk(self):
+        data = self.toPlainText().encode("utf-8")
 
-if __name__ == '__main__':
+        # QSaveFile writes to a temp file first, then atomically renames → no
+        # risk of ending up with half-written files if the app crashes.
+        f = QSaveFile(str(self._path))
+        if f.open(QSaveFile.WriteOnly | QSaveFile.Text):
+            f.write(data)
+            f.commit()
+
+
+
+
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    square = FloatingSquare()
+    note = FloatingNote("note.txt")
     sys.exit(app.exec_())
