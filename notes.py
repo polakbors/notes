@@ -1,4 +1,4 @@
-import sys ,pathlib
+import sys ,pathlib, argparse
 from PyQt5.QtWidgets import QApplication, QTextEdit, QWidget, QVBoxLayout
 from PyQt5.QtCore import QTimer, QSaveFile, Qt
 
@@ -56,6 +56,12 @@ class FloatingNote(QTextEdit):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Floating note app")
+
+    parser.add_argument("--title", default="note.txt", help="Path to the note file")
+
+    args = parser.parse_args()
+
     app = QApplication(sys.argv)
-    note = FloatingNote("note.txt")
+    note = FloatingNote(note_file=args.title)
     sys.exit(app.exec_())
