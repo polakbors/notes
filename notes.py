@@ -1,4 +1,5 @@
 import sys ,pathlib, argparse
+from typing import Optional
 from PyQt5.QtWidgets import QApplication, QTextEdit, QWidget, QVBoxLayout
 from PyQt5.QtCore import QTimer, QSaveFile, Qt
 
@@ -6,19 +7,22 @@ from PyQt5.QtCore import QTimer, QSaveFile, Qt
 class FloatingNote(QTextEdit):
     """A frameless, always‑on‑top sticky note you can type into and drag around."""
 
-    def __init__(self, save_path: str | pathlib.Path,x: int = 100, y: int = 100, w: int = 200, h: int = 200, parent=None):
+    def __init__(self, save_path: str | pathlib.Path,color: Optional[str] = None, fontcolour: Optional[str] = None,x: int = 100, y: int = 100, w: int = 200, h: int = 200, parent=None):
         super().__init__()
+        self.color = color
+        self.fontcolour = fontcolour
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        self.setStyleSheet(
-            """
-            FloatingNote {
-                background: #fff9a0;      
+        bg = self.color  or "#fff9a0"
+        fg = self.fontcolour or "#000"
+        self.setStyleSheet(f"""
+            FloatingNote {{
+                background: {bg};
                 border: 2px solid #000;
-                color: #000;
+                color: {fg};
                 font: 12pt "Arial";
-            }
-            """
-        )
+            }}
+        """)
+
         self.setPlaceholderText("Type your note…")
         self.setAcceptRichText(False)
         self._path = pathlib.Path(save_path)
@@ -54,14 +58,14 @@ class FloatingNote(QTextEdit):
 
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Floating note app")
 
-    parser.add_argument("--title", default="note.txt", help="Path to the note file")
+    parser.add_argument("--name")
+    parser.add_argument("--color")
+    parser.add_argument("--fontcolour")
 
     args = parser.parse_args()
-
     app = QApplication(sys.argv)
-    note = FloatingNote(note_file=args.title)
+    note = FloatingNote(args.name,args.color,args.fontcolour)
     sys.exit(app.exec_())
