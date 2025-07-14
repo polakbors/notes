@@ -7,10 +7,12 @@ from PyQt5.QtCore import QTimer, QSaveFile, Qt
 class FloatingNote(QTextEdit):
     """A frameless, always‑on‑top sticky note you can type into and drag around."""
 
-    def __init__(self, save_path: str | pathlib.Path,color: Optional[str] = None, fontcolour: Optional[str] = None,x: int = 100, y: int = 100, w: int = 200, h: int = 200, parent=None):
+    def __init__(self, save_path: str | pathlib.Path,color: Optional[str] = None, fontcolour: Optional[str] = None,pernament: Optional[bool]=None,x: int = 100, y: int = 100, w: int = 200, h: int = 200, parent=None):
         super().__init__()
         self.color = color
         self.fontcolour = fontcolour
+        self.pernament = pernament
+        perna=self.pernament or False
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         bg = self.color  or "#fff9a0"
         fg = self.fontcolour or "#000"
@@ -25,6 +27,8 @@ class FloatingNote(QTextEdit):
 
         self.setPlaceholderText("Type your note…")
         self.setAcceptRichText(False)
+        if perna :
+            save_path= f"tmp/{save_path}"
         self._path = pathlib.Path(save_path)
         self._timer = QTimer(self, interval=1_000, singleShot=True)
         self._timer.timeout.connect(self._flush_to_disk)
@@ -64,8 +68,8 @@ if __name__ == "__main__":
     parser.add_argument("--name")
     parser.add_argument("--color")
     parser.add_argument("--fontcolour")
-
+    parser.add_argument("--pernament")
     args = parser.parse_args()
     app = QApplication(sys.argv)
-    note = FloatingNote(args.name,args.color,args.fontcolour)
+    note = FloatingNote(args.name,args.color,args.fontcolour,args.pernament)
     sys.exit(app.exec_())
