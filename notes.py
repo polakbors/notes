@@ -1,8 +1,9 @@
+import os
 import sys ,pathlib, argparse
 from typing import Optional
 from PyQt5.QtWidgets import QApplication, QTextEdit, QWidget, QVBoxLayout
 from PyQt5.QtCore import QTimer, QSaveFile, Qt
-
+from PyQt5.QtGui import QIcon
 
 class FloatingNote(QTextEdit):
     """A frameless, always‑on‑top sticky note you can type into and drag around."""
@@ -14,6 +15,7 @@ class FloatingNote(QTextEdit):
         self.pernament = pernament
         perna=self.pernament or False
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setWindowTitle("dwdw")
         bg = self.color  or "#fff9a0"
         fg = self.fontcolour or "#000"
         self.setStyleSheet(f"""
@@ -27,8 +29,8 @@ class FloatingNote(QTextEdit):
 
         self.setPlaceholderText("Type your note…")
         self.setAcceptRichText(False)
-        if perna :
-            save_path= f"tmp/{save_path}"
+        if not perna :
+            save_path= f"/tmp/{save_path}"
         self._path = pathlib.Path(save_path)
         self._timer = QTimer(self, interval=1_000, singleShot=True)
         self._timer.timeout.connect(self._flush_to_disk)
@@ -71,5 +73,15 @@ if __name__ == "__main__":
     parser.add_argument("--pernament")
     args = parser.parse_args()
     app = QApplication(sys.argv)
+    from PyQt5.QtGui import QPixmap
+    icon = QIcon("clippy.png")
+    app.setWindowIcon(icon)
+    from PyQt5.QtWidgets import QSystemTrayIcon
+
+    icon = QIcon("clippy.png")
+    tray = QSystemTrayIcon()
+    tray.setIcon(icon)
+    tray.show()
+
     note = FloatingNote(args.name,args.color,args.fontcolour,args.pernament)
     sys.exit(app.exec_())
