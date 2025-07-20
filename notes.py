@@ -3,7 +3,7 @@ import sys ,pathlib, argparse
 from typing import Optional
 from PyQt5.QtWidgets import QApplication, QTextEdit, QWidget, QVBoxLayout
 from PyQt5.QtCore import QTimer, QSaveFile, Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QGuiApplication, QIcon
 
 class FloatingNote(QTextEdit):
     """A frameless, always‑on‑top sticky note you can type into and drag around."""
@@ -15,7 +15,7 @@ class FloatingNote(QTextEdit):
         self.pernament = pernament
         perna=self.pernament or False
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        self.setWindowTitle("dwdw")
+        self.setWindowTitle(save_path)
         bg = self.color  or "#fff9a0"
         fg = self.fontcolour or "#000"
         self.setStyleSheet(f"""
@@ -70,18 +70,16 @@ if __name__ == "__main__":
     parser.add_argument("--name")
     parser.add_argument("--color")
     parser.add_argument("--fontcolour")
-    parser.add_argument("--pernament")
+    parser.add_argument("--pernament", action="store_true", help="...")
     args = parser.parse_args()
+    
     app = QApplication(sys.argv)
-    from PyQt5.QtGui import QPixmap
-    icon = QIcon("clippy.png")
-    app.setWindowIcon(icon)
-    from PyQt5.QtWidgets import QSystemTrayIcon
+    app.setApplicationName(args.name)           
+    app.setApplicationDisplayName(args.name)    
+    QGuiApplication.setDesktopFileName(f"{args.name}") 
 
-    icon = QIcon("clippy.png")
-    tray = QSystemTrayIcon()
-    tray.setIcon(icon)
-    tray.show()
-
+    # set the icon once for the whole app
+    #to fix #icon_path = "/home/borysrzepa/notes/notes/clippy.png"
+    #app.setWindowIcon(QIcon(icon_path))
     note = FloatingNote(args.name,args.color,args.fontcolour,args.pernament)
     sys.exit(app.exec_())

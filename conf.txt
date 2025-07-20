@@ -1,0 +1,2 @@
+name:xdd color:#fff9a0 fontcolour:#000000
+name:xd color:#ghf9a0 fontcolour:#003300
