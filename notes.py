@@ -1,18 +1,25 @@
 import os
 import sys ,pathlib, argparse
 from typing import Optional
-from PyQt5.QtWidgets import QApplication, QTextEdit, QWidget, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QTextEdit, QWidget, QVBoxLayout, QSizePolicy
 from PyQt5.QtCore import QTimer, QSaveFile, Qt
 from PyQt5.QtGui import QGuiApplication, QIcon
 
 class FloatingNote(QTextEdit):
     """A frameless, always‑on‑top sticky note you can type into and drag around."""
 
-    def __init__(self, save_path: str | pathlib.Path,color: Optional[str] = None, fontcolour: Optional[str] = None,pernament: Optional[bool]=None,x: int = 100, y: int = 100, w: int = 200, h: int = 200, parent=None):
+    def __init__(self, save_path: str | pathlib.Path,color: Optional[str] = None, fontcolour: Optional[str] = None,pernament: Optional[bool]=None,
+                 sizex: Optional[int] = 300, sizey: Optional[int] = 300, fontsize: Optional[int] = 12, txtin: Optional[str] = "", parent=None,
+                 resize: Optional[bool] = False, x: int = 100, y: int = 100):
         super().__init__()
+        self.resized = resize
         self.color = color
         self.fontcolour = fontcolour
         self.pernament = pernament
+        self.sizex = sizex
+        self.sizey = sizey
+        self.fontsize = fontsize
+        self.txtin = txtin
         perna=self.pernament or False
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setWindowTitle(save_path)
@@ -28,7 +35,9 @@ class FloatingNote(QTextEdit):
         """)
 
         self.setPlaceholderText("Type your note…")
-        self.setAcceptRichText(False)
+        self.setText(txtin)
+        self.setFontPointSize(fontsize)
+        self.setLineWrapMode(QTextEdit.WidgetWidth)
         if not perna :
             save_path= f"/tmp/{save_path}"
         self._path = pathlib.Path(save_path)
@@ -36,7 +45,15 @@ class FloatingNote(QTextEdit):
         self._timer.timeout.connect(self._flush_to_disk)
 
         self.textChanged.connect(self._timer.start)
-        self.setFixedSize(w, h)
+        print(self.resized)
+        if self.resized:
+            print(sizex, sizey, "qweqweqw")
+            self.setMinimumSize(sizex, sizey)
+            self.setMaximumSize(16777215, 16777215)  
+            self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        else:
+            print
+            self.setFixedSize(sizex, sizey)
         self.move(x, y)
         self.show()
 
@@ -71,6 +88,11 @@ if __name__ == "__main__":
     parser.add_argument("--color")
     parser.add_argument("--fontcolour")
     parser.add_argument("--pernament", action="store_true", help="...")
+    parser.add_argument("--sizex", type=int, default=100, help="X position of the note")
+    parser.add_argument("--sizey", type=int, default=100, help="Y position of the note")
+    parser.add_argument("--fontsize", type=int, default=12, help="Font size of the note")
+    parser.add_argument("--txtin", type=str, default="", help="Initial text in the note")
+    parser.add_argument("--resize", action="store_true", help="Enable note resizing")
     args = parser.parse_args()
     
     app = QApplication(sys.argv)
@@ -81,5 +103,5 @@ if __name__ == "__main__":
     # set the icon once for the whole app
     #to fix #icon_path = "/home/borysrzepa/notes/notes/clippy.png"
     #app.setWindowIcon(QIcon(icon_path))
-    note = FloatingNote(args.name,args.color,args.fontcolour,args.pernament)
+    note = FloatingNote(args.name,args.color,args.fontcolour,args.pernament , args.sizex, args.sizey, args.fontsize, args.txtin)
     sys.exit(app.exec_())
