@@ -16,6 +16,7 @@ parser.add_argument("--sizex", type=int, default=300, help="X position of the no
 parser.add_argument("--sizey", type=int, default=300, help="Y position of the note")
 parser.add_argument("--fontsize", type=int, default=12, help="Font size of the note")
 parser.add_argument("--resize", action="store_true", help="This flag is used to enable note resizing")
+parser.add_argument("--clean", action="store_true",help="This flag is used to clean all empty notes")
 #parser.add_argument("--sticky", default=True, help="sticks")
 
 
@@ -28,8 +29,17 @@ cmd = [
     "--name", args.name,
     "--color", args.color,
     "--fontcolour", args.fontcolour,
+    "--sizex", str(args.sizex),
+    "--sizey", str(args.sizey),
+    "--fontsize", str(args.fontsize),
+    "--txtin", args.txtin,
 
 ]
+if args.clean:
+    cmd3=[
+        "find . -type f -size -1k -exec rm {} +"
+    ]
+    subprocess.run(cmd3, shell=True, check=True)
 if args.pernament:
     cmd.append("--pernament")
     filename = f"{args.name}"  # Assuming the file name is derived from the arg
@@ -68,14 +78,17 @@ if  args.bringup:
                 "--sizex", str(args.sizex),
                 "--sizey", str(args.sizey),
                 "--fontsize", str(args.fontsize),
-                "--txtin", args.txtin
-            ]
+                "--txtin", args.txtin,            ]
+            if args.resize:
+                cmd.append("--resize")
             subprocess.Popen(cmd,start_new_session=True)
 else:
+    if args.resize:
+        cmd.append("--resize")
     subprocess.Popen(cmd,start_new_session=True)
 
 
 # This flag is used to bring up the note if it already exists
 
 # Launch as subprocess (non-blocking)
-##TODO  -> if file is empty file gets deleted -> -> resizing, maybe location -> implement stickiness
+##TODO  -> -> implement stickiness
